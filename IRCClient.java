@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
@@ -15,27 +14,25 @@ public class IRCClient {
         try (Socket socket = new Socket("localhost", 5000)) {
             PrintWriter cout = new PrintWriter(socket.getOutputStream(), true);
 
-            if (reply.equals("")) {
-                try {
-                    ThreadClient threadClient = new ThreadClient(socket);
-                    new Thread(threadClient).start(); // start thread to receive message
-                } catch (Exception e) {
+            try {
+                ThreadClient threadClient = new ThreadClient(socket);
+                new Thread(threadClient).start(); // start thread to receive message
+            } catch (Exception e) {
 
-
-                    cout.println(reply + ": has joined chat-room.");
-                    do {
-                        String message = (name + " : ");
-                        reply = sc.nextLine();
-                        if (reply.equals("logout")) {
-                            cout.println("logout");
-                            break;
-                        }
-                        cout.println(message + reply);
-                    } while (!reply.equals("logout"));
-                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            cout.println(reply + ": has joined chat-room.");
+            do {
+                String message = (name + " : ");
+                reply = sc.nextLine();
+                if (reply.equals("logout")) {
+                    cout.println("logout");
+                    break;
+                }
+                cout.println(message + reply);
+            } while (!reply.equals("logout"));
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
         }
     }
 }
