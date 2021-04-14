@@ -9,7 +9,7 @@ public class IRCServer {
         ArrayList<Socket> clients = new ArrayList<>();
         HashMap<Socket, String> clientNameList = new HashMap<Socket, String>();
         try (ServerSocket serversocket = new ServerSocket(5000)) {
-            System.out.println("Server is started...");
+            System.out.println("Server started...");
             while (true) {
                 Socket socket = serversocket.accept();
                 clients.add(socket);

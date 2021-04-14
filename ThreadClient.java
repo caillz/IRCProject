@@ -4,6 +4,9 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.SocketException;
 
+/**
+ * Thread for Client
+ */
 class ThreadClient implements Runnable {
 
     private Socket socket;

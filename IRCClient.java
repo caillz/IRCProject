@@ -21,7 +21,7 @@ public class IRCClient {
 
             }
 
-            cout.println(reply + ": has joined chat-room.");
+            cout.println(name + ": has joined chat-room.");
             do {
                 String message = (name + " : ");
                 reply = sc.nextLine();
