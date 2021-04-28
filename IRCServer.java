@@ -1,9 +1,6 @@
 import java.io.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class IRCServer {
@@ -54,41 +51,19 @@ public class IRCServer {
         private final Socket clientSocket;
         PrintWriter out = null;
         BufferedReader in = null;
-        BufferedWriter cout = null;
-        //public HashMap<Socket, String> userNames = IRCServer.userNames;
-        //private BufferedReader cin;
-
 
         public ClientHandler(Socket socket) throws IOException {
             this.clientSocket = socket;
         }
 
-        //@Override
         public void run() {
-            /*PrintWriter out = null;
-            BufferedReader in = null;*/
             try {
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 int user = 0;
-                //String user;
-                //user = in.readLine();
-                //System.out.println("Screen name is:" + line);
-                /*System.out.println("sock is:  "
-                        + clientSocket.getInetAddress()
-                        .getHostAddress());*/
-                //userNames.put(clientSocket, user);
-                //System.out.println(userNames);
 
-               String line;
+                String line;
                 while ((line = in.readLine()) != null) {
-                    /*if (user != 1) {
-                        // message to server
-                        System.out.printf(" Sent from the client: %s\n",
-                                line);
-                        // message to client
-                        out.println("User name saved.");
-                    }*/
                     if (user == 0) {
                         // message to server
                         System.out.printf(" Sent from the client: %s\n",
@@ -106,9 +81,7 @@ public class IRCServer {
                         System.out.printf(" Sent from %s: %s\n", userNames.get(clientSocket),
                                 line);
                         // message to client
-                        //out.println(line);
                         parseData(clientSocket, line);
-
                     }
                 }
             } catch (IOException e) {
@@ -127,24 +100,6 @@ public class IRCServer {
                     e.printStackTrace();
                 }
             }
-
-
-        /*try {
-            while (true) {
-                String message = cin.readLine();
-                System.out.println(message);
-            }
-        } catch (SocketException e) {
-            System.out.println("You left waiting room");
-        } catch (IOException exception) {
-            System.out.println(exception);
-        } finally {
-            try {
-                cin.close();
-            } catch (Exception exception) {
-                System.out.println(exception);
-            }
-        }*/
         }
 
         /* Method to parse the data received and perform the appropriate action */
