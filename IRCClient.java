@@ -6,44 +6,7 @@ import java.util.Scanner;
 
 public class IRCClient {
 
-    public static void main(String[] args) throws IOException {
-        /* add new user to user names list */
-        /*try (Socket socket = new Socket("localhost", 5000)) {
-            System.out.println("Connected to the server");
-            // writing to server
-            PrintWriter cout = new PrintWriter(
-                    socket.getOutputStream(), true);
-            // reading from server
-            BufferedReader cin
-                    = new BufferedReader(new InputStreamReader(
-                    socket.getInputStream()));
-            System.out.println("Enter your screen name: ");
-
-            // object of scanner class
-            Scanner sc = new Scanner(System.in);
-            String line = null;
-            String msg = null;
-            // reading from user
-            while (!"logout".equalsIgnoreCase(line)) {
-                line = sc.nextLine();
-                // sending the user input to server
-                cout.println(line);
-                cout.flush();
-
-                // displaying server reply
-                System.out.println("Server replied "
-                        + cin.readLine());
-
-
-                    String message = cin.readLine();
-                    System.out.println(message);
-
-            }
-            sc.close();
-        } catch (Exception e) {
-            e.getStackTrace();
-        }*/
-
+    public static void main(String[] args) {
         String name = "empty";
         String reply = "empty";
         Scanner sc = new Scanner(System.in);
