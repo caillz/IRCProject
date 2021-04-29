@@ -71,6 +71,7 @@ public class IRCServer {
                         // message to client
                         out.println("User name saved.");
                         userNames.put(clientSocket, line);
+                        userList.add(line);
                         System.out.println(userNames);
                         connections.add(clientSocket);
                         user++;
@@ -125,7 +126,6 @@ public class IRCServer {
                     } else {
                         /* no message provided */
                         out.println("Empty message, nothing sent");
-                        //sendMessageToClient("Empty message, nothing sent");
                     }
 
                 }
@@ -139,8 +139,8 @@ public class IRCServer {
                     msg = arr[2];
                     privateMsg(socket, user, msg);
                 } else {
+                    /* notify user */
                     out.println("Invalid command");
-                    //sendMessageToClient("Invalid command");
                 }
             } else if (message.contains("/join")) {
                 String [] checkMsg = message.split("\\s+");
@@ -163,7 +163,6 @@ public class IRCServer {
             ArrayList<Socket> validUsers = new ArrayList<>();
             /* go through sockets in connection list */
             for (Socket connection : connections) {
-                //for (Socket s : connections) {
                 /* don't store client who is sending message */
                 if (connection != socket) {
                     /* find sockets with non empty current channel */
@@ -172,7 +171,6 @@ public class IRCServer {
                     }
                 }
             }
-            System.out.println("VALID USERS: " + validUsers);
             /* go through sockets in valid users */
             for (Socket s : validUsers) {
                 /* only send to sockets who are looking at the same current channel */
@@ -181,7 +179,6 @@ public class IRCServer {
                     PrintWriter cout = new PrintWriter(
                             s.getOutputStream(), true);
                     cout.println(user+": "+message);
-                    //sendMessageToClient(user + " : " + message);
                 }
             }
             if (validUsers.isEmpty()) {
@@ -189,52 +186,46 @@ public class IRCServer {
             }
         }
         /* Method that handles private message commands */
-        void privateMsg(Socket socket, String user, String message) throws IOException {
+        void privateMsg(Socket socket, String userToReceiveMsg, String message) throws IOException {
             String sender = userNames.get(socket);
             /* user tried to send a private message to themselves */
-            if (user.equals(sender)) {
+            if (userToReceiveMsg.equals(sender)) {
+                /* notify user */
                 out.println("Cannot send a private message to yourself");
-                //sendMessageToClient("Cannot send a private message to yourself");
                 return;
             }
             /* check that the username is in the user list */
-            if (userList.contains(user)) {
+            if (userList.contains(userToReceiveMsg)) {
                 /* go through userNames to find correct socket */
                 for (Map.Entry<Socket, String> entry : userNames.entrySet()) {
-                    if (entry.getValue().equals("user")) {
-                        /* try sending the private message */
-                        out.println("Private message from " + sender + ": " + message);
-                        //sendMessageToClient("Private message from " + sender + ": " + message);
+                    if (entry.getValue().equals(userToReceiveMsg)) {
+                        /* attempt to send private message */
+                        PrintWriter cout = new PrintWriter(
+                                entry.getKey().getOutputStream(), true);
+                        cout.println("Private message from " + sender+": "+message);
                     }
                 }
             } else {
                 /* username wasn't in user list */
                 out.println("User doesn't exist");
-                //sendMessageToClient("User doesn't exist");
             }
         }
         /* Method that allows users to join a channel */
         void joinChannel(Socket socket, String channel) throws IOException {
-            String user = userNames.get(socket);
             int numberOfChannels = channels.size();
             System.out.println("NUMBER OF CHANNELS: " + channels.size());
             boolean channelFound = false;
-            //if (channels.contains(channel)) {
             for (String s : channels) {
                 if (s.equals(channel)) {
-                    // channel exists
+                    /* channel exists */
                     if (numberOfChannels < 10) {
-                        //channels.add(channel);
                         currentChannel.put(socket, channel);
+                        /* notify user */
                         out.println("Joined " + channel);
-                        //sendMessageToClient("Joined " + channel);
                         channelFound = true;
-                        //broadcastData(socket, user, channel);
                     } else {
+                        /* notify user */
                         out.println("Channel limit reached");
-                        //sendMessageToClient("Channel limit reached");
-                        //out.flush();
-                        //dataOutputStream.close();
                     }
                 }
             }
@@ -245,17 +236,16 @@ public class IRCServer {
                         channels.add(channel);
                         currentChannel.put(socket, channel);
                         System.out.println("channel added");
-                        System.out.println("CHANNELS" + channels);
+                        //System.out.println("CHANNELS" + channels);
+                        /* notify user */
                         out.println("Joined " + channel);
-                        //sendMessageToClient("Joined " + channel);
-                        //broadcastData(socket, user, channel);
                     } else {
+                        /* notify user */
                         out.println("Invalid channel name");
-                        //sendMessageToClient("Invalid channel name");
                     }
                 } else {
+                    /* notify user */
                     out.println("Channel limit reached");
-                    //sendMessageToClient("Channel limit reached");
                 }
             }
         }
