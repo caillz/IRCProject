@@ -143,13 +143,35 @@ public class IRCServer {
                     out.println("Invalid command");
                 }
             } else if (message.contains("/join")) {
-                String [] checkMsg = message.split("\\s+");
+                String[] checkMsg = message.split("\\s+");
                 if (checkMsg.length == 2) {
                     String[] arr = message.split(" ", 2);
                     channel = arr[1];
                     joinChannel(socket, channel);
+                } else {
+                    /* notify user */
+                    out.println("Too many arguments. Type '/help' for usage");
+                }
+            } else if (message.contains("/leave")) {
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 2) {
+                    String[] arr = message.split(" ", 2);
+                    channel = arr[1];
+                    leaveChannel(socket, channel);
+                } else {
+                    /* notify user */
+                    out.println("Too many arguments. Type '/help' for usage");
+                }
+            } else if (message.contains("/listRooms")){
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 1) {
+                    listAllRooms();
+                } else {
+                    /* notify user */
+                    out.println("Too many arguments. Type '/help' for usage");
                 }
             } else {
+                /* notify user */
                 out.println("Invalid command");
             }
         }
@@ -248,6 +270,29 @@ public class IRCServer {
                     out.println("Channel limit reached");
                 }
             }
+        }
+        /* Allows a user to leave a channel */
+        void leaveChannel(Socket socket, String channel) {
+            String user = userNames.get(socket);
+            if (channels.contains(channel)) {
+                if (currentChannel.get(socket).equals(channel)) {
+                    currentChannel.remove(socket);
+                    /* notify user */
+                    out.println("You have left the channel");
+                } else {
+                    /* notify user */
+                    out.println("You cannot leave a room you are not in");
+                }
+            } else {
+                /* notify user */
+                out.println("Channel does not exist");
+            }
+        }
+        /* List all rooms */
+        void listAllRooms() {
+            out.println("Current rooms: ");
+            String channelList = channels.toString();
+            out.println(channelList);
         }
     }
 }
