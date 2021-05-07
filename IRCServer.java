@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IRCServer {
     static HashMap<Socket, String> currentChannel = new HashMap<>();
@@ -150,7 +151,7 @@ public class IRCServer {
                     joinChannel(socket, channel);
                 } else {
                     /* notify user */
-                    out.println("Too many arguments. Type '/help' for usage");
+                    out.println("Number of arguments is wrong. Type '/help' for usage");
                 }
             } else if (message.contains("/leave")) {
                 String[] checkMsg = message.split("\\s+");
@@ -160,16 +161,34 @@ public class IRCServer {
                     leaveChannel(socket, channel);
                 } else {
                     /* notify user */
-                    out.println("Too many arguments. Type '/help' for usage");
+                    out.println("Number of arguments is wrong. Type '/help' for usage");
                 }
-            } else if (message.contains("/listRooms")){
+            } else if (message.contains("/listChannels")) {
                 String[] checkMsg = message.split("\\s+");
                 if (checkMsg.length == 1) {
-                    listAllRooms();
+                    listAllChannels();
                 } else {
                     /* notify user */
                     out.println("Too many arguments. Type '/help' for usage");
                 }
+            } else if (message.contains("/removeChannel")) {
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 2) {
+                    String[] arr = message.split(" ", 2);
+                    channel = arr[1];
+                    removeChannel(channel);
+                } else {
+                    /* notify user */
+                    out.println("Number of arguments is wrong. Type '/help' for usage");
+                }
+            } else if (message.contains("/help")) {
+                out.println("List of valid commands and their usage:\n"
+                                + "/join <#channel-name>\n"
+                                + "/leave <#channel-name>\n"
+                                + "/msg <message-string>\n"
+                                + "/privateMsg <username> <message-string>\n"
+                                + "/listChannels\n"
+                                + "/removeChannel <#channel-name>\n");
             } else {
                 /* notify user */
                 out.println("Invalid command");
@@ -235,7 +254,6 @@ public class IRCServer {
         /* Method that allows users to join a channel */
         void joinChannel(Socket socket, String channel) throws IOException {
             int numberOfChannels = channels.size();
-            System.out.println("NUMBER OF CHANNELS: " + channels.size());
             boolean channelFound = false;
             for (String s : channels) {
                 if (s.equals(channel)) {
@@ -258,7 +276,6 @@ public class IRCServer {
                         channels.add(channel);
                         currentChannel.put(socket, channel);
                         System.out.println("channel added");
-                        //System.out.println("CHANNELS" + channels);
                         /* notify user */
                         out.println("Joined " + channel);
                     } else {
@@ -281,18 +298,27 @@ public class IRCServer {
                     out.println("You have left the channel");
                 } else {
                     /* notify user */
-                    out.println("You cannot leave a room you are not in");
+                    out.println("You cannot leave a channel you are not in");
                 }
             } else {
                 /* notify user */
                 out.println("Channel does not exist");
             }
         }
-        /* List all rooms */
-        void listAllRooms() {
-            out.println("Current rooms: ");
-            String channelList = channels.toString();
-            out.println(channelList);
+        /* List all channels */
+        void listAllChannels() {
+            out.println("Current channels: ");
+            out.println(String.join("\n", channels));
+        }
+
+        /* Allows user to delete a channel */
+        void removeChannel (String channel) {
+            if (channel.contains("#")) {
+                channels.remove(channel);
+                out.println("Channel removed");
+            } else {
+                out.println("Channel name must begin with '#'");
+            }
         }
     }
 }
