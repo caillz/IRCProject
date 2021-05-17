@@ -60,7 +60,7 @@ public class IRCClient {
                     System.out.println(message);
                 }
             } catch (SocketException e) {
-                System.out.println("You left the chat-room");
+                System.out.println("You left the internet relay chat");
             } catch (IOException exception) {
                 System.out.println(exception);
             } finally {
