@@ -17,24 +17,19 @@ public class IRCClient {
         try (Socket socket = new Socket("localhost", 5000)) {
             PrintWriter cout = new PrintWriter(socket.getOutputStream(), true);
 
-            try {
-                ThreadClient threadClient = new ThreadClient(socket);
-                new Thread(threadClient).start(); // start thread to receive message
-            } catch (Exception e) {
-
-            }
-
-            cout.println(name /*+ ": has joined chat-room."*/);
+            ThreadClient threadClient = new ThreadClient(socket);
+            new Thread(threadClient).start(); // start thread to receive message
+            cout.println(name);
             do {
-                //String message = (name + " : ");
                 reply = sc.nextLine();
-                if (reply.equals("logout")) {
-                    cout.println("logout");
+                if (reply.equals("/logout")) {
+                    cout.println("logout successful");
                     break;
                 }
-                cout.println(/*message + */reply);
+                cout.println(reply);
             } while (!reply.equals("logout"));
         } catch (Exception e) {
+            System.out.println("Unable to connect to server..");
             System.out.println(e.getStackTrace());
         }
     }
@@ -58,6 +53,13 @@ public class IRCClient {
                 while (true) {
                     String message = cin.readLine();
                     System.out.println(message);
+                    /* Check for state of socket
+                     * If the connection to the server is lost, alert user and break thread
+                     */
+                    if (socket.getInputStream().read() == -1) {
+                        System.out.println("Connection to server lost..logging you out");
+                        break;
+                    }
                 }
             } catch (SocketException e) {
                 System.out.println("You left the internet relay chat");
