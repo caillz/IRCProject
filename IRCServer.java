@@ -21,8 +21,9 @@ public class IRCServer {
             System.out.println("Server started...");
             while (true) {
                 Socket socket = server.accept();
-                // Displaying that new client is connected
-                // to server
+                /* Displaying that new client is connected
+                 * to server
+                 */
                 System.out.println("New client connected "
                         + socket.getInetAddress()
                         .getHostAddress());
@@ -62,27 +63,38 @@ public class IRCServer {
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 int user = 0;
+                //boolean usernameTaken = false;
 
                 String line;
                 while ((line = in.readLine()) != null) {
                     if (user == 0) {
-                        // message to server
+                        /* message to server */
                         System.out.printf(" Sent from the client: %s\n",
                                 line);
-                        // message to client
-                        out.println("User name saved.");
+
+                        /* Check the user's chosen username to make sure
+                         * it is not already taken by another user
+                         */
+                        while (usernameTaken(line)) {
+                            out.println("Username is taken. Try again: ");
+                            line = in.readLine();
+                        }
+
                         userNames.put(clientSocket, line);
                         userList.add(line);
-                        System.out.println(userNames);
                         connections.add(clientSocket);
+                        System.out.println(userNames);
+                        /* notify client */
+                        out.println("User name saved.");
                         user++;
                         continue;
+
+
                     }
                     if (user == 1) {
-                        // message to server
+                        /* message to server */
                         System.out.printf(" Sent from %s: %s\n", userNames.get(clientSocket),
                                 line);
-                        // message to client
                         parseData(clientSocket, line);
                     }
                 }
@@ -183,12 +195,15 @@ public class IRCServer {
                 }
             } else if (message.contains("/help")) {
                 out.println("List of valid commands and their usage:\n"
-                                + "/join <#channel-name>\n"
-                                + "/leave <#channel-name>\n"
-                                + "/msg <message-string>\n"
-                                + "/privateMsg <username> <message-string>\n"
-                                + "/listChannels\n"
-                                + "/removeChannel <#channel-name>\n");
+                        + "/join <#channel-name>\n"
+                        + "/leave <#channel-name>\n"
+                        + "/msg <message-string>\n"
+                        + "/privateMsg <username> <message-string>\n"
+                        + "/listChannels\n"
+                        + "/removeChannel <#channel-name>\n"
+                        + "/logout\n");
+            } else if (message.contains("/logout")) {
+                out.println();
             } else {
                 /* notify user */
                 out.println("Invalid command");
@@ -319,6 +334,18 @@ public class IRCServer {
             } else {
                 out.println("Channel name must begin with '#'");
             }
+        }
+
+        /* Checks the userList for potential usernames to make sure the
+         * username doesn't already exist
+         */
+        boolean usernameTaken(String user) {
+            for (String s : userList) {
+                if (s.equals(user)){
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -22,12 +22,13 @@ public class IRCClient {
             cout.println(name);
             do {
                 reply = sc.nextLine();
-                if (reply.equals("/logout")) {
+                /*if (reply.equals("/logout")) {
                     cout.println("logout successful");
                     break;
-                }
+                }*/
                 cout.println(reply);
-            } while (!reply.equals("logout"));
+            } while (!reply.equals("/logout"));
+            cout.println("logout successful");
         } catch (Exception e) {
             System.out.println("Unable to connect to server..");
             System.out.println(e.getStackTrace());
@@ -52,14 +53,14 @@ public class IRCClient {
             try {
                 while (true) {
                     String message = cin.readLine();
-                    System.out.println(message);
                     /* Check for state of socket
                      * If the connection to the server is lost, alert user and break thread
                      */
-                    if (socket.getInputStream().read() == -1) {
+                    if (message == null) {
                         System.out.println("Connection to server lost..logging you out");
-                        break;
+                        System.exit(1);
                     }
+                    System.out.println(message);
                 }
             } catch (SocketException e) {
                 System.out.println("You left the internet relay chat");
