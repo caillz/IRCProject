@@ -85,7 +85,8 @@ public class IRCServer {
                         connections.add(clientSocket);
                         System.out.println(userNames);
                         /* notify client */
-                        out.println("User name saved.");
+                        out.println("User name saved");
+                        out.println("Type '/help' at any time for hints");
                         user++;
                         continue;
 

@@ -10,7 +10,10 @@ public class IRCClient {
         String name = "empty";
         String reply = "empty";
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter your screen name: ");
+        System.out.println("Welcome to Joey & Caillie's Internet Relay Chat!");
+        System.out.println("CS494/594 Internetworking Protocols");
+        System.out.println("------------------------------------------------");
+        System.out.println("Enter your username: ");
         reply = sc.nextLine();
         name = reply;
 
