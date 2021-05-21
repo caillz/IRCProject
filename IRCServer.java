@@ -10,6 +10,7 @@ public class IRCServer {
     static ArrayList<String> userList = new ArrayList<>();
     static ArrayList<String> channels = new ArrayList<>();
     static HashMap<Socket, String> userNames = new HashMap<>();
+    static HashMap<Socket, String> buddyList = new HashMap<>();
     static final int port = 5000;
     static ServerSocket server;
 
@@ -122,6 +123,7 @@ public class IRCServer {
             String user;
             String msg;
             String channel;
+            String buddy = null;
             /* message command received */
             if (message.contains("/msg")) {
                 /* user not in any channels */
@@ -154,7 +156,7 @@ public class IRCServer {
                     privateMsg(socket, user, msg);
                 } else {
                     /* notify user */
-                    out.println("Invalid command");
+                    out.println("Too few arguments. Type '/help' for usage");
                 }
             } else if (message.contains("/join")) {
                 String[] checkMsg = message.split("\\s+");
@@ -164,7 +166,7 @@ public class IRCServer {
                     joinChannel(socket, channel);
                 } else {
                     /* notify user */
-                    out.println("Number of arguments is wrong. Type '/help' for usage");
+                    out.println("Too few arguments. Type '/help' for usage");
                 }
             } else if (message.contains("/leave")) {
                 String[] checkMsg = message.split("\\s+");
@@ -174,7 +176,7 @@ public class IRCServer {
                     leaveChannel(socket, channel);
                 } else {
                     /* notify user */
-                    out.println("Number of arguments is wrong. Type '/help' for usage");
+                    out.println("Too few arguments. Type '/help' for usage");
                 }
             } else if (message.contains("/listChannels")) {
                 String[] checkMsg = message.split("\\s+");
@@ -192,19 +194,38 @@ public class IRCServer {
                     removeChannel(channel);
                 } else {
                     /* notify user */
-                    out.println("Number of arguments is wrong. Type '/help' for usage");
+                    out.println("Too few arguments. Type '/help' for usage");
                 }
             } else if (message.contains("/help")) {
-                out.println("List of valid commands and their usage:\n"
+                out.println("-----------------------------------------\n"
+                        + "List of valid commands and their usage:\n"
+                        + "-----------------------------------------\n"
                         + "/join <#channel-name>\n"
                         + "/leave <#channel-name>\n"
                         + "/msg <message-string>\n"
                         + "/privateMsg <username> <message-string>\n"
                         + "/listChannels\n"
                         + "/removeChannel <#channel-name>\n"
-                        + "/logout\n");
+                        + "/buddyList"
+                        + "/addBuddy <username>"
+                        + "/listUsers"
+                        + "/logout\n"
+                        + "-----------------------------------------");
             } else if (message.contains("/logout")) {
                 out.println();
+            } else if (message.contains("/buddyList")) {
+                buddyList(socket);
+            } else if (message.contains("/addBuddy")) {
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 2) {
+                    String[] arr = message.split(" ", 2);
+                    buddy = arr[1];
+                    addToBuddyList(socket, buddy);
+                } else {
+                    out.println("Too few arguments. Type '/help' for usage");
+                }
+            } else if (message.contains("/listUsers")) {
+                listUsers();
             } else {
                 /* notify user */
                 out.println("Invalid command");
@@ -347,6 +368,44 @@ public class IRCServer {
                 }
             }
             return false;
+        }
+
+        /* Allows the user to view their buddy list */
+        void buddyList(Socket socket) {
+            if (buddyList.get(socket) == null) {
+                out.println("Your buddy list is empty!");
+            }
+            else {
+                out.println("Your current buddy list:");
+                out.println(buddyList.get(socket));
+            }
+        }
+
+        /* Allows the user to add a username to their buddy list */
+        void addToBuddyList(Socket socket, String username) {
+            if (userList.contains(username)) {
+                if (buddyList.get(socket) != null) {
+                    String list;
+                    list = buddyList.get(socket);
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(list + username);
+                    buddyList.put(socket, "\n" + sb);
+                    out.println("Buddy added");
+                } else {
+                    buddyList.put(socket, username);
+                    out.println("Buddy added");
+                }
+            } else {
+                out.println("User does not exist");
+            }
+        }
+
+        /* Lists all online users */
+        void listUsers() {
+            out.println("Online users:");
+            String list = userList.toString();
+            list = list.substring(1, list.length() - 1);
+            out.println(list);
         }
     }
 }
