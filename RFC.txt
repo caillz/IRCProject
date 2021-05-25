@@ -1,0 +1,245 @@
+CS594/494							Portland State University
+Document: RFC Type: Draft					Spring 2021
+Project: IRC Class Project 				Date:5/6/2021
+Names:George Kingston,Caillie Juergens
+
+
+
+Internet Relay Chat
+
+Status of Memo:
+
+This Document goes over the protocols implemented by this IRC Protocol which can be found in the repository: 
+
+https://github.com/caillz/IRCProject
+
+This is currently not the final draft of this document and should not be used as such. (5/6/21)
+
+A copy of this document should also be found in the repository above.
+
+Copyright Notice:
+
+This document has standard copyright held by the authors of this document. This Document and all code referenced in this document is intellectual property of the authors. 
+
+This document summarizes the current rules governing IRC and intellectual property rights of George Kingston and Caillie Juergens as of June 1st, 2021.
+
+
+Abstract:
+
+This document contains the protocols implemented by the authors to create a limited use IRC. This IRC is network dependent and allows its users limited power. This project was created for the final project for CS Internetworking Protocol for spring 2021.
+
+Table of Contents:
+
+Status of Memo
+Copyright notice
+Abstract
+Introduction
+Naming conventions
+Background Information
+Server Side:
+	Client Handler:
+	Channel:
+		Create Channel:
+		Join Channel:
+		Leave Channel:
+		Delete Channel:
+ 	Client:
+Messaging:
+		Individual Messages:
+		Group Messages:
+Error Handling:
+	Client:
+	Server:
+Security:
+Acknowledgements:
+Conclusions: 
+
+
+Introduction:
+
+This document describes a local internet relay chat created by the authors.This IRC has simple implementations and simple execution. A local network is used as a relay for users on the same network. 
+
+This network does things like, allows direct messaging, allows group messaging, creation of a buddy list, listing all users on the network, list all channels, add a channel, remove channel,and leave rooms.
+
+Naming conventions for this document:
+
+In this IRC the naming conventions words with “Italicized” text are key words to the IRC system. 
+
+Coding or pseudo code will be used in this document and will have an extra indentation for an example look directly below:
+
+	Static Class ThreadCount implements Runnable{
+		private socket Socket;
+		private BufferRead cin;
+
+		Public ThreadClient(Socket socket) throws IOException{
+			This.socket = socket;
+			This.cin = new BufferReader(new InputStreamReader(...)
+		}
+All words that use “bold” text will be headers to topics in this RFC document.
+
+BackGround information:
+
+All the communication in the Internet Relay Chat described in this paper uses TCP and IP protocols. Using sockets and ports with address 5000. There is an open channel created with the port where private and public messages can be sent.
+
+This application is free and is not meant to be for sale.
+
+The IRCserver must be run first, as no client functionality is possible without it. 
+
+It is important to note that only ten channels can be created in the current implementation, this is easy to change though if needed. The purpose of this is to not overload the network and cause unforcene bugs. In later implementations this aspect would change.
+
+Server:
+
+It is important to note that to run the client you must first be running the server.java. This is due to the fact that the client can only operate on a server, and without one it has no method to open a connection with other hosts. 
+
+The server being created uses a designated Port and the socked tool in java to create a server on the network that is being used.
+
+	server= new ServerSocket(port);
+	server.setReuseAddress(true);
+	System.out. println(“server started”);
+
+While the server is being created that code is nested in a try catch block. If there is an error a stack trace exception is thrown.
+	
+	catch(IOException e){
+		e.printStackTrace();
+		}
+
+To allow the ability of continuous communication the use of java sockets has been employed. The socket allows a connection between two endpoints on the same network. Further in this section the use of different protocols using sockets will be discussed. 
+
+Client Handler:
+
+The client handler is where the server manages each client and makes sure all aspects of the client are behaving correctly.
+
+Things that the client handler deals with are:
+
+Listens to the messages sent by the client and parses each one for commands, Performs said commands triggered by client so long as the arguments following the command are syntactically correct, otherwise broadcasts an error message. Listens for client errors such as unexpected disconnection from server. Ensuring direct messages sent correctly. Ensuring channels are set up correctly. Allowing public messages to be sent in a group chat room. Validating to make sure members are on server for direct messaging.
+
+It is important to note that inside the client handler different sockets are taken and used to make connections in the network. This protocol allows for a smoother handling of errors. 
+
+Channel:
+
+Once a user has been correctly added to the IRC, they will have 4 major options 
+
+Create channel: When the user types the join channel command, if there is no channel that exists with that name yet, the channel is created and the user is automatically joined to that channel. This is done by a socket being passed which contains the address of the network. The program ensures that the channel being created uses that same network address. The program also first checks to see if that channel is already in existence. It utilizes the network address as well as the name of the channel to ensure that each channel is unique and on the same network. 
+
+Join channel:This functionality is paired with create channel. If a user tries to join a channel that is non-existent, then the program uses the create channel protocol to create the channel trying to be joined.
+
+The current IRC checks to make sure that the channel already exists, it does this with the code below
+
+	for(String s : channels){
+		if(s.equals(channel)){
+			…
+			…
+		
+The system also has a limit to the number of channels that can be added to the system, currently the limit is 10. This is to lower the congestion possible on the IRC and limit the possibility of errors. This is handled by the code below.
+
+	if(numberofChannels <10){
+		currentChannel.put(socket,channel);
+		out.println(“joined”+channel);
+		channelFound=true;
+	}else{
+		out.println(channel limit reached”);
+		}
+
+
+Leave Channel: the ability for a user to a channel is also implemented. A user may want this so they dont keep getting notifications for that channel, or they may want to join another channel since you can only be in one channel at a time.
+
+The program accomplished leave channel buy connecting to the network used in the socket. Once a secure connection is established the program removes the channel name from the list of connections to the network. Allow the channel to still exist on the network, but no connection to the client. 
+
+Delete channel: Deleting a channel is important in this IRC since there is a limit of 10 channels.
+
+This protocol searches the current network that the client is connected to via sockets and searches all channels signified by the “#”. If the channel is found the remove function is implemented from the java socket library which severs all connections to that channel from any client on the network.
+	
+Successful leaving of a channel:
+
+	if(channels.contains(channel){
+		if(currentChannel.get(socket).equals(channel)){
+			currentChannel.removee(socket);
+			out.println(“you have left the channel”);
+
+If the Channel doesn't exists:
+	
+}else{
+out.println(“you cannot leave a channel you are not in”);
+}
+}else{
+out.println(“channel does not exist”);
+
+
+Client:
+
+For the client to work correctly the program must have access to the host IP address as well as all IP addresses from clients in the IRC.
+
+To make a connection the client uses the socket feature in java with the IP address as follows.
+
+	Socket NewSocket = new socket(“10.0.0.25”, 5000);
+
+Java in this way utilizes the network and the port number to ensure a connection for the client and the server.
+
+Messaging:
+
+General features of the messaging feature, such at how you can message, who you can message. Whether these are private or public, if they can be removed or not.
+
+The messaging feature can only be used by the client.
+
+Individual Messages:
+	
+First a connection is established using the host networks IP address and Port number and deemed secure using the java sockets. Once a secure link is established a continuous link between the two clients is maintained. If the user can not be found on the network a error message is thrown. 
+
+The messages are sent via the network and once a message is sent, the protocol to receive a message is initiated by the recipient. 
+
+A key and hash map are used to help ensure the privacy and security of the message.
+
+Group Messages:
+
+A group message is similar to a direct message, but instead of there being just two endpoints, for a channel there is a direct connection to every user in that channel on the network. 
+
+When a client selects to join or create a channel there are multiple endpoints, one for each client in the room. Securing that a secure network is maintained the java socket uses the port number and IP to maintain continuous communication, while making sure no other user has access to the messaging. 
+
+In this protocol we use an array list to maintain the users, which is checked every time a message is sent inside a channel.
+
+If the connection is lost to a single user in the group then they will be removed from the list. 
+
+Error Handling:
+
+Client: The client server establishes a connection using java sockets with the port number and IP address. If there is an issue establishing a connection then an error is thrown. 
+
+While the client is continually running if an error occurs, for example a connection is lost, then an error is thrown and the connection is severed. 
+
+Server: The main method our protocol uses to error handle is to throw error messages using try, catch blocks. 
+
+Each function for messaging, adding channels etc uses this system of try catch blocks. The main driver code also uses error throwing as its technique to handle errors. 
+
+Security:
+
+Much of the security for this IRC is handled with the java sockets security measure protocols. 
+
+The socket uses protocols such as “secure socket” that are located in the transport layer. This ensures that this IRC is not vulnerable to hacking of any kind. 
+
+In the Client and server side there were additional security measures taken. When data is transmitted the program ensures that the receiver exists in the client list that is maintained by the server. 
+
+In the case of the server if a connection is lost with any given client or the host then the connection is immediately terminated. 
+
+There is still room for improvement in regards to security. 
+
+Acknowledgements:
+
+Many reference materials have been used when designing and implementing this IRC and writing this RFC. Below are links to resources that were used and are acknowledged. 
+
+a-guide-to-java-sockets
+
+
+Conclusions: 
+
+In this project George (joey) Kingston and Caillie Juergons have created an efficient and secure Internet Relay Chat network. 
+
+The IRC creates a secure connection on a single network utilizing tools such as java sockets.
+
+Once the server is created then clients can be added. This allows functionality to be such as group messaging, creating a channel, buddy list, and much more fun. 
+
+
+
+
+
+
+
+
