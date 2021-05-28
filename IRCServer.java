@@ -146,7 +146,7 @@ public class IRCServer {
 
                 }
                 /* received private message command */
-            } else if (message.contains("/privatemsg")) {
+            } else if (message.contains("/privateMsg")) {
                 String [] checkMsg = message.split("\\s+");
                 /* check for valid number of arguments */
                 if (checkMsg.length >= 3) {
@@ -206,9 +206,9 @@ public class IRCServer {
                         + "/privateMsg <username> <message-string>\n"
                         + "/listChannels\n"
                         + "/removeChannel <#channel-name>\n"
-                        + "/buddyList"
-                        + "/addBuddy <username>"
-                        + "/listUsers"
+                        + "/buddyList\n"
+                        + "/addBuddy <username>\n"
+                        + "/listUsers\n"
                         + "/logout\n"
                         + "-----------------------------------------");
             } else if (message.contains("/logout")) {
