@@ -54,6 +54,7 @@ public class IRCServer {
         private final Socket clientSocket;
         PrintWriter out = null;
         BufferedReader in = null;
+        String username;
 
         public ClientHandler(Socket socket) throws IOException {
             this.clientSocket = socket;
@@ -81,8 +82,9 @@ public class IRCServer {
                             line = in.readLine();
                         }
 
-                        userNames.put(clientSocket, line);
-                        userList.add(line);
+                        username = line;
+                        userNames.put(clientSocket, username);
+                        userList.add(username);
                         connections.add(clientSocket);
                         System.out.println(userNames);
                         /* notify client */
@@ -110,6 +112,8 @@ public class IRCServer {
                     if (in != null) {
                         in.close();
                         clientSocket.close();
+                        userNames.remove(clientSocket);
+                        userList.remove(username);
                     }
                 }
                 catch (IOException e) {
@@ -212,7 +216,7 @@ public class IRCServer {
                         + "/logout\n"
                         + "-----------------------------------------");
             } else if (message.contains("/logout")) {
-                out.println();
+                out.println("...");
             } else if (message.contains("/buddyList")) {
                 buddyList(socket);
             } else if (message.contains("/addBuddy")) {

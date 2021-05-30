@@ -25,10 +25,6 @@ public class IRCClient {
             cout.println(name);
             do {
                 reply = sc.nextLine();
-                /*if (reply.equals("/logout")) {
-                    cout.println("logout successful");
-                    break;
-                }*/
                 cout.println(reply);
             } while (!reply.equals("/logout"));
             cout.println("logout successful");
