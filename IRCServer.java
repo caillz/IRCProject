@@ -71,7 +71,7 @@ public class IRCServer {
                 while ((line = in.readLine()) != null) {
                     if (user == 0) {
                         /* message to server */
-                        System.out.printf(" Sent from the client: %s\n",
+                        System.out.printf("Sent from the client: %s\n",
                                 line);
 
                         /* Check the user's chosen username to make sure
@@ -86,7 +86,7 @@ public class IRCServer {
                         userNames.put(clientSocket, username);
                         userList.add(username);
                         connections.add(clientSocket);
-                        System.out.println(userNames);
+                        //System.out.println(userNames); //for testing
                         /* notify client */
                         out.println("User name saved");
                         out.println("Type '/help' at any time for hints");
@@ -97,7 +97,7 @@ public class IRCServer {
                     }
                     if (user == 1) {
                         /* message to server */
-                        System.out.printf(" Sent from %s: %s\n", userNames.get(clientSocket),
+                        System.out.printf("Sent from %s: %s\n", userNames.get(clientSocket),
                                 line);
                         parseData(clientSocket, line);
                     }
