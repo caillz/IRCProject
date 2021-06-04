@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class IRCServer {
-    static HashMap<Socket, String> currentChannel = new HashMap<>();
+    static HashMap<Socket, String> currentChannels = new HashMap<>();
     static ArrayList<Socket> connections = new ArrayList<>();
     static ArrayList<String> userList = new ArrayList<>();
     static ArrayList<String> channels = new ArrayList<>();
@@ -115,8 +115,7 @@ public class IRCServer {
                         userNames.remove(clientSocket);
                         userList.remove(username);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -131,18 +130,31 @@ public class IRCServer {
             /* message command received */
             if (message.contains("/msg")) {
                 /* user not in any channels */
-                if ((currentChannel.get(socket)) == null) {
+                if ((currentChannels.get(socket) == null)){
                     /* notify user */
                     out.println("Must join a channel to send a message");
+                    return;
                 } else {
                     /* send the message */
                     if (message.length() > 4) {
                         /* name of user sending message */
                         user = userNames.get(socket);
                         /* message to send */
-                        String[] arr = message.split(" ", 2);
-                        msg = arr[1];
-                        broadcastData(socket, user, msg);
+                        String[] arr = message.split(" ", 3);
+                        if (arr.length < 3) {
+                            out.println("Too few arguments. Type '/help' for usage");
+                            return;
+                        }
+                        msg = arr[2];
+                        channel = arr[1];
+                        if (!currentChannels.get(socket).contains(channel+" ")) {
+                            out.println("You cannot send a message in a channel you haven't joined");
+                            return;
+                        }
+                        if (channels.contains(channel))
+                            broadcastData(socket, user, msg, channel);
+                        else
+                            out.println("Channel doesn't exist");
                     } else {
                         /* no message provided */
                         out.println("Empty message, nothing sent");
@@ -151,7 +163,7 @@ public class IRCServer {
                 }
                 /* received private message command */
             } else if (message.contains("/privateMsg")) {
-                String [] checkMsg = message.split("\\s+");
+                String[] checkMsg = message.split("\\s+");
                 /* check for valid number of arguments */
                 if (checkMsg.length >= 3) {
                     String[] arr = message.split(" ", 3);
@@ -182,7 +194,15 @@ public class IRCServer {
                     /* notify user */
                     out.println("Too few arguments. Type '/help' for usage");
                 }
-            } else if (message.contains("/listChannels")) {
+            } else if (message.contains("/listMyChannels")) {
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 1) {
+                    listUsersChannels(socket);
+                } else {
+                    /* notify user */
+                    out.println("Too many arguments. Type '/help' for usage");
+                }
+            } else if (message.contains("/listAllChannels")) {
                 String[] checkMsg = message.split("\\s+");
                 if (checkMsg.length == 1) {
                     listAllChannels();
@@ -190,7 +210,7 @@ public class IRCServer {
                     /* notify user */
                     out.println("Too many arguments. Type '/help' for usage");
                 }
-            } else if (message.contains("/removeChannel")) {
+            } else if (message.contains("/remove")) {
                 String[] checkMsg = message.split("\\s+");
                 if (checkMsg.length == 2) {
                     String[] arr = message.split(" ", 2);
@@ -206,10 +226,11 @@ public class IRCServer {
                         + "-----------------------------------------\n"
                         + "/join <#channel-name>\n"
                         + "/leave <#channel-name>\n"
-                        + "/msg <message-string>\n"
+                        + "/msg <#channel-name> <message-string>\n"
                         + "/privateMsg <username> <message-string>\n"
-                        + "/listChannels\n"
-                        + "/removeChannel <#channel-name>\n"
+                        + "/listMyChannels\n"
+                        + "/listAllChannels\n"
+                        + "/remove <#channel-name>\n"
                         + "/buddyList\n"
                         + "/addBuddy <username>\n"
                         + "/listUsers\n"
@@ -240,33 +261,34 @@ public class IRCServer {
          * the server according to the current channel that the
          * sender is in
          */
-        void broadcastData(Socket socket, String user, String message) throws IOException {
+        void broadcastData(Socket socket, String user, String message, String channelName) throws IOException {
             /* stores sockets that have a non-empty current field */
             ArrayList<Socket> validUsers = new ArrayList<>();
             /* go through sockets in connection list */
             for (Socket connection : connections) {
                 /* don't store client who is sending message */
                 if (connection != socket) {
-                    /* find sockets with non empty current channel */
-                    if (currentChannel.get(connection) != null) {
+                    /* find sockets with the channel in their list of current channels */
+                    if (currentChannels.get(connection).contains(channelName+" ")) {
                         validUsers.add(connection);
                     }
                 }
             }
             /* go through sockets in valid users */
             for (Socket s : validUsers) {
-                /* only send to sockets who are looking at the same current channel */
-                if (currentChannel.get(s).equals(currentChannel.get(socket))) {
+                /* only send to sockets who are associated with the channel mentioned */
+                if (currentChannels.get(s).contains(channelName)) {
                     /* attempt to send message */
                     PrintWriter cout = new PrintWriter(
                             s.getOutputStream(), true);
-                    cout.println(user+": "+message);
+                    cout.println(user + ": " + message);
                 }
             }
             if (validUsers.isEmpty()) {
                 out.println("No other users in channel");
             }
         }
+
         /* Method that handles private message commands */
         void privateMsg(Socket socket, String userToReceiveMsg, String message) throws IOException {
             String sender = userNames.get(socket);
@@ -284,7 +306,7 @@ public class IRCServer {
                         /* attempt to send private message */
                         PrintWriter cout = new PrintWriter(
                                 entry.getKey().getOutputStream(), true);
-                        cout.println("Private message from " + sender+": "+message);
+                        cout.println("Private message from " + sender + ": " + message);
                     }
                 }
             } else {
@@ -292,18 +314,35 @@ public class IRCServer {
                 out.println("User doesn't exist");
             }
         }
+
         /* Method that allows users to join a channel */
         void joinChannel(Socket socket, String channel) throws IOException {
             int numberOfChannels = channels.size();
-            boolean channelFound = false;
+            String userChannels;
             for (String s : channels) {
-                if (s.equals(channel)) {
+                if (s.contains(channel)) {
                     /* channel exists */
                     if (numberOfChannels < 10) {
-                        currentChannel.put(socket, channel);
+                        if (currentChannels.get(socket) == null) {
+                            currentChannels.put(socket, channel+" ");
+                        }
+                        else {
+                            if (!currentChannels.get(socket).contains(channel)) {
+                                userChannels = currentChannels.get(socket);
+                                StringBuilder sb = new StringBuilder();
+                                sb.append(userChannels + channel + " ");
+                                currentChannels.put(socket, sb.toString());
+                                listUsersChannels(socket);
+                                return;
+                            } else {
+                                out.println("You are already joined to this channel");
+                                return;
+                            }
+                        }
                         /* notify user */
                         out.println("Joined " + channel);
-                        channelFound = true;
+                        listUsersChannels(socket);
+                        return;
                     } else {
                         /* notify user */
                         out.println("Channel limit reached");
@@ -311,32 +350,43 @@ public class IRCServer {
                 }
             }
             /* channel doesn't exists yet */
-            if (!channelFound){
-                if (numberOfChannels < 10) {
-                    if (channel.contains("#")) {
-                        channels.add(channel);
-                        currentChannel.put(socket, channel);
-                        System.out.println("channel added");
-                        /* notify user */
-                        out.println("Joined " + channel);
-                    } else {
-                        /* notify user */
-                        out.println("Invalid channel name");
+            if (numberOfChannels < 10) {
+                if (channel.contains("#")) {
+                    channels.add(channel);
+                    if (currentChannels.get(socket) == null)
+                        currentChannels.put(socket, channel + " ");
+                    else {
+                        userChannels = currentChannels.get(socket);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(userChannels + channel + " ");
+                        currentChannels.put(socket, sb.toString());
                     }
+                    System.out.println("channel added");
+                    /* notify user */
+                    out.println("Joined " + channel);
+                    listUsersChannels(socket);
+
                 } else {
                     /* notify user */
-                    out.println("Channel limit reached");
+                    out.println("Invalid channel name");
                 }
+            } else {
+                /* notify user */
+                out.println("Channel limit reached");
             }
         }
         /* Allows a user to leave a channel */
         void leaveChannel(Socket socket, String channel) {
-            String user = userNames.get(socket);
+            //String user = userNames.get(socket);
+            String userChannels;
             if (channels.contains(channel)) {
-                if (currentChannel.get(socket).equals(channel)) {
-                    currentChannel.remove(socket);
+                if (currentChannels.get(socket).contains(channel+" ")) {
+                    userChannels = currentChannels.get(socket);
+                    userChannels = userChannels.replaceFirst(channel+" ", "");
+                    currentChannels.put(socket, userChannels);
                     /* notify user */
                     out.println("You have left the channel");
+                    listUsersChannels(socket);
                 } else {
                     /* notify user */
                     out.println("You cannot leave a channel you are not in");
@@ -348,18 +398,31 @@ public class IRCServer {
         }
         /* List all channels */
         void listAllChannels() {
-            out.println("Current channels: ");
-            out.println(String.join("\n", channels));
+            if (!channels.isEmpty())
+                out.println("Current channels on server: " + String.join(" ", channels));
+            else
+                out.println("No channels on the server");
         }
 
         /* Allows user to delete a channel */
         void removeChannel (String channel) {
-            if (channel.contains("#")) {
-                channels.remove(channel);
-                out.println("Channel removed");
-            } else {
-                out.println("Channel name must begin with '#'");
+            for (Socket socket : connections) {
+                /* check that the channel to remove doesn't have members */
+                if (currentChannels.get(socket).contains(channel+" ")) {
+                    out.println("You cannot remove a channel with active members");
+                    return;
+                }
             }
+            if (channels.contains(channel+" ")) {
+                if (channel.contains("#")) {
+                    channels.remove(channel);
+                    out.println("Channel removed");
+                } else {
+                    out.println("Channel name must begin with '#'");
+                }
+            }
+            else
+                out.println("Channel doesn't exist");
         }
 
         /* Checks the userList for potential usernames to make sure the
@@ -410,6 +473,14 @@ public class IRCServer {
             String list = userList.toString();
             list = list.substring(1, list.length() - 1);
             out.println(list);
+        }
+
+        /* Lists the user's channels */
+        void listUsersChannels(Socket socket) {
+            if (currentChannels.get(socket).isEmpty())
+                out.println("You aren't joined to any channels");
+            else
+                out.println("Your channels: " + currentChannels.get(socket));
         }
     }
 }
