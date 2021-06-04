@@ -151,7 +151,7 @@ public class IRCServer {
                             out.println("You cannot send a message in a channel you haven't joined");
                             return;
                         }
-                        if (channels.contains(channel))
+                        if (channels.contains(channel+" "))
                             broadcastData(socket, user, msg, channel);
                         else
                             out.println("Channel doesn't exist");
@@ -257,7 +257,7 @@ public class IRCServer {
                 if (checkMsg.length == 2) {
                     String[] arr = message.split(" ", 2);
                     channel = arr[1];
-                    if (channels.contains(channel)) {
+                    if (channels.contains(channel+" ")) {
                         listUsersInChannel(channel);
                     } else {
                         out.println("Channel does not exist");
@@ -298,7 +298,7 @@ public class IRCServer {
                     cout.println(user + ": " + message);
                 }
             }
-            if (validUsers.isEmpty()) {
+            if (validUsers.isEmpty() || validUsers == null) {
                 out.println("No other users in channel");
             }
         }
@@ -334,14 +334,14 @@ public class IRCServer {
             int numberOfChannels = channels.size();
             String userChannels;
             for (String s : channels) {
-                if (s.contains(channel)) {
+                if (s.contains(channel+ " ")) {
                     /* channel exists */
                     if (numberOfChannels < 10) {
                         if (currentChannels.get(socket) == null) {
                             currentChannels.put(socket, channel+" ");
                         }
                         else {
-                            if (!currentChannels.get(socket).contains(channel)) {
+                            if (!currentChannels.get(socket).contains(channel+ " ")) {
                                 userChannels = currentChannels.get(socket);
                                 StringBuilder sb = new StringBuilder();
                                 sb.append(userChannels + channel + " ");
@@ -366,7 +366,7 @@ public class IRCServer {
             /* channel doesn't exists yet */
             if (numberOfChannels < 10) {
                 if (channel.contains("#")) {
-                    channels.add(channel);
+                    channels.add(channel+" ");
                     if (currentChannels.get(socket) == null)
                         currentChannels.put(socket, channel + " ");
                     else {
@@ -393,7 +393,7 @@ public class IRCServer {
         void leaveChannel(Socket socket, String channel) {
             //String user = userNames.get(socket);
             String userChannels;
-            if (channels.contains(channel)) {
+            if (channels.contains(channel+" ")) {
                 if (currentChannels.get(socket).contains(channel+" ")) {
                     userChannels = currentChannels.get(socket);
                     userChannels = userChannels.replaceFirst(channel+" ", "");
@@ -429,7 +429,7 @@ public class IRCServer {
             }
             if (channels.contains(channel+" ")) {
                 if (channel.contains("#")) {
-                    channels.remove(channel);
+                    channels.remove(channel+" ");
                     out.println("Channel removed");
                 } else {
                     out.println("Channel name must begin with '#'");
@@ -491,7 +491,7 @@ public class IRCServer {
 
         /* Lists the user's channels */
         void listUsersChannels(Socket socket) {
-            if (currentChannels.get(socket).isEmpty())
+            if (currentChannels.get(socket)== null || currentChannels.get(socket).isEmpty())
                 out.println("You aren't joined to any channels");
             else
                 out.println("Your channels: " + currentChannels.get(socket));
@@ -499,19 +499,20 @@ public class IRCServer {
 
         /* Lists the users in a specified channel */
         void listUsersInChannel(String channel) {
+            boolean usersFound = false;
             ArrayList<String> users = new ArrayList<>();
             for (Socket socket : connections) {
-                if (currentChannels.get(socket).contains(channel)) {
-                    users.add(userNames.get(socket));
+                if (currentChannels.get(socket) != null) {
+                    if (currentChannels.get(socket).contains(channel + " ")) {
+                        users.add(userNames.get(socket));
+                        usersFound = true;
+                    }
                 }
             }
-            if (users.isEmpty()) {
-                out.println("No users in this channel");
-            }
-            else
+            if (!users.isEmpty() || users == null)
                 out.println("Users currently in " +channel+ ": "+ String.join(", ", users));
-                //out.println("Current channels on server: " + String.join(" ", channels));
-
+            else if(!usersFound)
+                out.println("No users in this channel");
         }
     }
 }
