@@ -234,6 +234,7 @@ public class IRCServer {
                         + "/buddyList\n"
                         + "/addBuddy <username>\n"
                         + "/listUsers\n"
+                        + "/listUsersInChannel <#channel-name>\n"
                         + "/logout\n"
                         + "-----------------------------------------");
             } else if (message.contains("/logout")) {
@@ -249,8 +250,21 @@ public class IRCServer {
                 } else {
                     out.println("Too few arguments. Type '/help' for usage");
                 }
-            } else if (message.contains("/listUsers")) {
+            } else if (message.contains("/listUsers") && !message.contains("/listUsersInChannel")) {
                 listUsers();
+            } else if (message.contains("/listUsersInChannel")) {
+                String[] checkMsg = message.split("\\s+");
+                if (checkMsg.length == 2) {
+                    String[] arr = message.split(" ", 2);
+                    channel = arr[1];
+                    if (channels.contains(channel)) {
+                        listUsersInChannel(channel);
+                    } else {
+                        out.println("Channel does not exist");
+                    }
+                } else {
+                    out.println("Incorrect amount of arguments. Type '/help' for usage");
+                }
             } else {
                 /* notify user */
                 out.println("Invalid command");
@@ -481,6 +495,23 @@ public class IRCServer {
                 out.println("You aren't joined to any channels");
             else
                 out.println("Your channels: " + currentChannels.get(socket));
+        }
+
+        /* Lists the users in a specified channel */
+        void listUsersInChannel(String channel) {
+            ArrayList<String> users = new ArrayList<>();
+            for (Socket socket : connections) {
+                if (currentChannels.get(socket).contains(channel)) {
+                    users.add(userNames.get(socket));
+                }
+            }
+            if (users.isEmpty()) {
+                out.println("No users in this channel");
+            }
+            else
+                out.println("Users currently in " +channel+ ": "+ String.join(", ", users));
+                //out.println("Current channels on server: " + String.join(" ", channels));
+
         }
     }
 }
