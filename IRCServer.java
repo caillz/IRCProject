@@ -130,11 +130,7 @@ public class IRCServer {
             /* message command received */
             if (message.contains("/msg")) {
                 /* user not in any channels */
-                if ((currentChannels.get(socket) == null)){
-                    /* notify user */
-                    out.println("Must join a channel to send a message");
-                    return;
-                } else {
+                if ((currentChannels.get(socket) != null)){
                     /* send the message */
                     if (message.length() > 4) {
                         /* name of user sending message */
@@ -160,8 +156,11 @@ public class IRCServer {
                         out.println("Empty message, nothing sent");
                     }
 
+                } else {
+                    /* notify user */
+                    out.println("Must join a channel to send a message");
                 }
-                /* received private message command */
+                    /* received private message command */
             } else if (message.contains("/privateMsg")) {
                 String[] checkMsg = message.split("\\s+");
                 /* check for valid number of arguments */
